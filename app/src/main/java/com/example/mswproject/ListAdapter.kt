@@ -12,8 +12,12 @@ class ListAdapter(val context: Context, val list: ArrayList<Place>) : BaseAdapte
         val view: View = LayoutInflater.from(context).inflate(R.layout.row_layout, parent, false)
 
         val placeName = view.findViewById(R.id.places_name) as AppCompatTextView
+        val placeRating = view.findViewById(R.id.places_rating) as AppCompatTextView
+        val placeOpeningHours = view.findViewById(R.id.places_opening_hours) as AppCompatTextView
 
         placeName.text = list[position].name // to string on the rest
+        placeRating.text = list[position].rating.toString()
+        placeOpeningHours.text = list[position].openingHours.toString()
 
         return view
     }
