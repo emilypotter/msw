@@ -1,8 +1,10 @@
 package com.example.mswproject
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -12,39 +14,35 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
-import org.json.JSONException
+import kotlinx.android.synthetic.main.activity_main.view.*
 import org.json.JSONObject
-import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.e("fwaf", "fdef")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val searchButton = findViewById<Button>(R.id.search_button)
-
+        val locationButton = findViewById<Button>(R.id.location_button)
 
         searchButton.setOnClickListener(this)
+        locationButton.setOnClickListener(this)
     }
 
-    private fun onButtonPress(latitude: Float?, longitude: Float?) {
+    private fun placeSearch(lat: Double, lon: Double) {
+        val inputManager: InputMethodManager =
+            getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
-    }
-
-    override fun onClick(v: View?) {
-        val textView = findViewById<TextView>(R.id.text)
-        val latitudeString = findViewById<EditText>(R.id.latitude_text).text.toString()
-        val latitude = latitudeString.toDouble()
-        val longitudeString = findViewById<EditText>(R.id.longitude_text).text.toString()
-        val longitude = longitudeString.toDouble()
+        inputManager.hideSoftInputFromWindow(
+            currentFocus!!.windowToken,
+            InputMethodManager.HIDE_NOT_ALWAYS
+        )
 
         // Instantiate the RequestQueue.
         val queue = Volley.newRequestQueue(this)
-        //val url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=-33.8670522,151.1957362&radius=1500&type=cafe&keyword=surf&key=AIzaSyCyRBE0IR0jmxLf61_9jmlH3Fphb5p4LpI"
-        val url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=lodge&keyword=surf&key=AIzaSyCyRBE0IR0jmxLf61_9jmlH3Fphb5p4LpI"
+        val url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=1000&type=lodge&keyword=surf&key=AIzaSyCyRBE0IR0jmxLf61_9jmlH3Fphb5p4LpI"
         Log.d("click", url)
 
         // Request a string response from the provided URL.
@@ -83,10 +81,42 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 val adapter = ListAdapter(context = this, list = list)
                 places_list.adapter = adapter
             },
-            Response.ErrorListener { textView.text = "That didn't work!" })
+            Response.ErrorListener {error -> Log.e("Error", "Something went wrong $error") })
 
         // Add the request to the RequestQueue.
         queue.add(jsonObjectRequest)
     }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.search_button -> {
+                val latitudeString = findViewById<EditText>(R.id.latitude_text).text.toString()
+                val latitude = latitudeString.toDouble()
+                val longitudeString = findViewById<EditText>(R.id.longitude_text).text.toString()
+                val longitude = longitudeString.toDouble()
+
+                placeSearch(latitude, longitude)
+            }
+            R.id.location_button -> {
+                val url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCyRBE0IR0jmxLf61_9jmlH3Fphb5p4LpI"
+                // Instantiate the RequestQueue.
+                val queue = Volley.newRequestQueue(this)
+
+                val jsonObjectRequest = JsonObjectRequest(Request.Method.POST, url, null,
+                    Response.Listener { response ->
+                        val locationObj = response.getJSONObject("location")
+                        val lat = locationObj.getString("lat").toDouble()
+                        val lon = locationObj.getString("lng").toDouble()
+
+                        placeSearch(lat, lon)
+                    },
+                    Response.ErrorListener { error -> Log.e("Error", "Something went wrong $error")})
+
+                // Add the request to the RequestQueue.
+                queue.add(jsonObjectRequest)
+            }
+        }
+
+    }
 }
- // comments, api key, classes/interfaces, tests
+ // comments, api key, classes/interfaces, tests, error handling
