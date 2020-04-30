@@ -12,44 +12,50 @@
         android:layout_width="304dp"
         android:layout_height="53dp"
         android:textSize="20sp"
-        tools:layout_editor_absoluteX="34dp"
-        tools:layout_editor_absoluteY="25dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/places_rating"
-        android:layout_width="138dp"
-        android:layout_height="44dp"
-        android:layout_marginTop="20dp"
+        android:layout_width="127dp"
+        android:layout_height="41dp"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.428"
+        app:layout_constraintHorizontal_bias="0.2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/places_name"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.1" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/places_opening_hours"
-        android:layout_width="106dp"
-        android:layout_height="123dp"
+        android:layout_width="112dp"
+        android:layout_height="41dp"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.243"
-        app:layout_constraintStart_toEndOf="@+id/places_rating"
+        app:layout_constraintHorizontal_bias="0.8"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/places_name"
-        app:layout_constraintVertical_bias="0.032" />
+        app:layout_constraintVertical_bias="0.1"
+        />
 
     <TextView
         android:id="@+id/textView2"
         android:layout_width="55dp"
-        android:layout_height="44dp"
-        android:layout_marginTop="15dp"
-        android:text="Rating"
+        android:layout_height="41dp"
+        android:text="Rating:"
         android:textSize="16sp"
-        app:layout_constraintEnd_toStartOf="@+id/places_rating"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/places_name"
+        app:layout_constraintVertical_bias="0.1"
         tools:text="Rating" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
