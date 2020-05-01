@@ -22,15 +22,14 @@
         android:layout_width="205dp"
         android:layout_height="40dp"
         android:ems="10"
+        android:hint="Latitude"
         android:inputType="textPersonName"
-        android:text="-33.8670522"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintVertical_bias="0"
-        tools:text="-33.8670522" />
+        app:layout_constraintVertical_bias="0" />
 
     <EditText
         android:id="@+id/radius_text"
@@ -51,16 +50,14 @@
         android:layout_width="206dp"
         android:layout_height="40dp"
         android:ems="10"
+        android:hint="Longitude"
         android:inputType="textPersonName"
-        android:text="151.1957362"
-        tools:layout_editor_absoluteX="205dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintVertical_bias="0"
-        tools:text="151.1957362" />
+        app:layout_constraintVertical_bias="0" />
 
 
     <Button
