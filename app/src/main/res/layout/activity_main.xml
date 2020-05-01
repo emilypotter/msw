@@ -33,6 +33,20 @@
         tools:text="-33.8670522" />
 
     <EditText
+        android:id="@+id/radius_text"
+        android:layout_width="205dp"
+        android:layout_height="40dp"
+        android:ems="10"
+        android:hint="Radius (m) (50000 max)"
+        android:inputType="textPersonName"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.08" />
+
+    <EditText
         android:id="@+id/longitude_text"
         android:layout_width="206dp"
         android:layout_height="40dp"
@@ -59,7 +73,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_bias="0.1"
-        app:layout_constraintVertical_bias="0.1"
+        app:layout_constraintVertical_bias="0.15"
         tools:layout_editor_absoluteX="39dp"
         tools:layout_editor_absoluteY="62dp" />
 
@@ -73,20 +87,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
-        app:layout_constraintVertical_bias="0.1"
+        app:layout_constraintVertical_bias="0.15"
         tools:layout_editor_absoluteX="208dp"
         tools:layout_editor_absoluteY="48dp" />
 
-    <com.google.android.gms.maps.MapView
-        android:id="@+id/mapView"
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="180dp"
+        app:layout_constraintVertical_bias="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1"
-        tools:layout_editor_absoluteX="2dp"
-        tools:layout_editor_absoluteY="434dp" />
+        app:layout_constraintTop_toBottomOf="@+id/places_list"
+        tools:context="com.example.kotlindemos.BasicMapDemoActivity" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

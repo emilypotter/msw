@@ -7,22 +7,36 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.*
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
 import org.json.JSONObject
 
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+class MainActivity : AppCompatActivity(), View.OnClickListener, OnMapReadyCallback {
+    private val validator:Validator = Validator()
+
+    private val zoomLevel = 13f
+
+    private var mMap: GoogleMap? = null
+    private val markers = ArrayList<Marker?>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val mapFragment : SupportMapFragment? =
+            supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+        mapFragment?.getMapAsync(this)
 
         val searchButton = findViewById<Button>(R.id.search_button)
         val locationButton = findViewById<Button>(R.id.location_button)
@@ -32,6 +46,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun placeSearch(lat: Double, lon: Double) {
+        // hide keyboard after search
         val inputManager: InputMethodManager =
             getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
@@ -40,65 +55,122 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             InputMethodManager.HIDE_NOT_ALWAYS
         )
 
-        // Instantiate the RequestQueue.
-        val queue = Volley.newRequestQueue(this)
-        val url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=1000&type=lodge&keyword=surf&key=AIzaSyCyRBE0IR0jmxLf61_9jmlH3Fphb5p4LpI"
-        Log.d("click", url)
+        // clear markers from previous search
+        mMap?.clear()
+        markers.clear()
 
-        // Request a string response from the provided URL.
-        val jsonObjectRequest = JsonObjectRequest(
-            Request.Method.GET, url, null,
-            Response.Listener<JSONObject> { response ->
-                val list = ArrayList<Place>()
-                val jsonArray = response.getJSONArray("results")
+        val radiusText = findViewById<EditText>(R.id.radius_text).text.toString()
 
-                var x = 0
-                while (x < jsonArray.length()) {
-                    val jsonObject = jsonArray.getJSONObject(x)
+        // check radius input is not empty
+        if (!validator.isInputEmpty(radiusText) && validator.isInputInt(radiusText) && validator.isRadiusValid(radiusText)) {
+            val rad = radiusText.toInt()
 
-                    var openString = ""
-                    if (jsonObject.has("opening_hours")) {
-                        val openingHours = jsonObject.getJSONObject("opening_hours")
-                        val open = openingHours.getBoolean("open_now")
-                        if (open) {
-                            openString = "Open now"
-                        } else if (!open) {
-                            openString = "Closed"
+            // Instantiate the RequestQueue.
+            val queue = Volley.newRequestQueue(this)
+            val url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${rad}&type=lodge&keyword=surf&key=${getString(R.string.api_key)}"
+            Log.d("click", url)
+
+            // Request a response from the provided URL
+            val jsonObjectRequest = JsonObjectRequest(
+                Request.Method.GET, url, null,
+                Response.Listener<JSONObject> { response ->
+                    val list = ArrayList<Place>()
+                    val jsonArray = response.getJSONArray("results")
+                    // for each place
+                    var x = 0
+                    while (x < jsonArray.length()) {
+                        val jsonObject = jsonArray.getJSONObject(x)
+                        // get info
+                        val name = jsonObject.getString("name")
+                        val rating = jsonObject.getInt("rating")
+
+                        // change opening hours boolean to string if it exists
+                        var openString = ""
+                        if (jsonObject.has("opening_hours")) {
+                            val openingHours = jsonObject.getJSONObject("opening_hours")
+                            val open = openingHours.getBoolean("open_now")
+                            if (open) {
+                                openString = "Open now"
+                            } else if (!open) {
+                                openString = "Closed"
+                            }
+                        } else {
+                            openString = "Opening times unavailable"
                         }
-                    } else {
-                        openString = "Opening times unavailable"
-                    }
-                    list.add(
-                        Place(
-                            jsonObject.getString("name"),
-                            jsonObject.getInt("rating"),
-                            openString
+
+                        // add marker to map
+                        val geometryObj = jsonObject.getJSONObject("geometry")
+                        val locationObj = geometryObj.getJSONObject("location")
+                        val latitude = locationObj.getDouble("lat")
+                        val longitude = locationObj.getDouble("lng")
+                        val markerOptions = MarkerOptions()
+                            .title(name)
+                            .position(LatLng(latitude, longitude))
+                        val marker = mMap?.addMarker(markerOptions)
+                        markers.add(marker)
+
+                        list.add(
+                            Place(
+                                name,
+                                rating,
+                                openString
+                            )
                         )
-                    )
-                    x++
-                }
+                        x++
+                    }
 
-                val adapter = ListAdapter(context = this, list = list)
-                places_list.adapter = adapter
-            },
-            Response.ErrorListener {error -> Log.e("Error", "Something went wrong $error") })
+                    if (list.isNotEmpty()) {
+                        // set camera to bounds of all markers
+                        val builder = LatLngBounds.Builder()
+                        for (marker in markers) {
+                            builder.include(marker?.position)
+                        }
+                        val bounds = builder.build()
+                        val move = CameraUpdateFactory.newLatLngBounds(bounds, 0)
+                        mMap?.moveCamera(move)
+                    } else {
+                        Toast.makeText(applicationContext, "No results found. Try a different location or expand your search radius.", Toast.LENGTH_SHORT).show();
+                    }
 
-        // Add the request to the RequestQueue.
-        queue.add(jsonObjectRequest)
+                    val adapter = ListAdapter(context = this, list = list)
+                    places_list.adapter = adapter
+
+                    // zoom out so so markers on edge are included
+                    if (list.isNotEmpty()) {
+                        val zoom = CameraUpdateFactory.zoomOut()
+                        mMap?.moveCamera(zoom)
+                    }
+
+
+                },
+                Response.ErrorListener {error -> Log.e("Error", "Something went wrong $error") })
+
+            // Add the request to the RequestQueue.
+            queue.add(jsonObjectRequest)
+        } else {
+            Toast.makeText(applicationContext, "Please enter a valid radius. It must be a whole number up to 50000.", Toast.LENGTH_SHORT).show();
+        }
+
+
     }
 
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.search_button -> {
                 val latitudeString = findViewById<EditText>(R.id.latitude_text).text.toString()
-                val latitude = latitudeString.toDouble()
                 val longitudeString = findViewById<EditText>(R.id.longitude_text).text.toString()
-                val longitude = longitudeString.toDouble()
 
-                placeSearch(latitude, longitude)
+                // check strings are valid before doing place search
+                if (!validator.isInputEmpty(latitudeString) && !validator.isInputEmpty(longitudeString) && validator.isInputDouble(latitudeString) && validator.isInputDouble(longitudeString)) {
+                    val latitude = latitudeString.toDouble()
+                    val longitude = longitudeString.toDouble()
+                    placeSearch(latitude, longitude)
+                } else {
+                    Toast.makeText(applicationContext, "Please enter a valid latitude and longitude", Toast.LENGTH_SHORT).show();
+                }
             }
             R.id.location_button -> {
-                val url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCyRBE0IR0jmxLf61_9jmlH3Fphb5p4LpI"
+                val url = "https://www.googleapis.com/geolocation/v1/geolocate?key=${getString(R.string.api_key)}"
                 // Instantiate the RequestQueue.
                 val queue = Volley.newRequestQueue(this)
 
@@ -109,6 +181,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         val lon = locationObj.getString("lng").toDouble()
 
                         placeSearch(lat, lon)
+
+                        // add marker for current location
+                        val markerOptions = MarkerOptions()
+                            .title("Me")
+                            .position(LatLng(lat, lon))
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                        val marker = mMap?.addMarker(markerOptions)
+                        markers.add(marker)
+                        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(lat, lon), zoomLevel))
                     },
                     Response.ErrorListener { error -> Log.e("Error", "Something went wrong $error")})
 
@@ -118,5 +199,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
     }
+
+    override fun onMapReady(googleMap: GoogleMap?) {
+        googleMap ?: return
+        with(googleMap) {
+            mMap = googleMap;
+        }
+    }
 }
- // comments, api key, classes/interfaces, tests, error handling
+ // comments, tests, error handling
